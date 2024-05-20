@@ -26,6 +26,9 @@ frame4.grid_propagate(False)
 label1 = tk.Label(frame1, text="Budget:", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
 label1.grid(row=0, column=0, padx=25, pady=25, sticky="w")
 
+label2 = tk.Label(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+label2.grid(row=1, column=0, padx=25, pady=25, sticky="w")
+
 tree = ttk.Treeview(frame2, show="headings")
 
 tree["columns"] = ("Name", "Type", "Price", "Date")
