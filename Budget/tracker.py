@@ -94,8 +94,6 @@ def summarize_expenses(expense_file_path, budget):
     print(f"Budget Per Day: ${daily_budget:.2f}")
 
 
-def green(text):
-    return f"\033[92m{text}\033[0m"
 
 
 if __name__ == "__main__":
