@@ -169,6 +169,9 @@ def enter_manually_popup():
     category_label = tk.Label(enter_manually_popup, text="Category:")
     category_label.grid(row=0, column=3, padx=10, pady=10, sticky="w")
 
+    priority_label = tk.Label(enter_manually_popup, text="Priority")
+    priority_label.grid(row=0, column=4, padx=10, pady=10, sticky="w")
+
     # Create the entry text fields
     name_entry = tk.Entry(enter_manually_popup)
     name_entry.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
@@ -182,6 +185,12 @@ def enter_manually_popup():
     category_combobox = ttk.Combobox(enter_manually_popup, textvariable=category_var, values=category_options, state="readonly")
     category_combobox.grid(row=1, column=3, padx=10, pady=10, sticky="ew")
     category_combobox.current(0)
+
+    priority_options = ["High", "Medium", "Low"]
+    priority_var = tk.StringVar(enter_manually_popup)
+    priority_combobox = ttk.Combobox(enter_manually_popup, textvariable=priority_var, values=priority_options, state="readonly")
+    priority_combobox.grid(row=1, column=4, padx=10, pady=10, sticky="ew")
+    priority_combobox.current(0)
 
     # Create the Confirm button
     confirm_button = tk.Button(enter_manually_popup, text="Confirm")
