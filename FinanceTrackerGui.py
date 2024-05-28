@@ -103,9 +103,35 @@ def main_window(budget):
     # Create Add New Expense button that will open up a pop-up window to enter/upload the expense
     add_new_expense_button = tk.Button(root, text="Add New Expense", command=expense_popup)
     add_new_expense_button.grid(row=2, column=0, columnspan=2, pady=10)
+    #Bottom left box
+    high_priority_label = tk.Label(frame3, text="High priority expenses : $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    high_priority_label.grid(row=0, column=0, padx=25, pady=25, sticky="w")
+    medium_priority_label = tk.Label(frame3, text="Medium priority expenses : $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    medium_priority_label.grid(row=1, column=0, padx=25, pady=25, sticky="w")
+    low_priority_label = tk.Label(frame3, text="Low priority expenses : $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    low_priority_label.grid(row=2, column=0, padx=25, pady=25, sticky="w")
+    
+    #bottom Right box
+
+    style = ttk.Style()
+    style.configure("TNotebook.Tab", font=('Helvetica', 25,'bold'), padding=[40,0])
+    notebook = ttk.Notebook(frame4, style="TNotebook")
+
+    
+    tab1 = ttk.Frame(notebook)
+    tab2 = ttk.Frame(notebook)
+    tab3 = ttk.Frame(notebook)
+    notebook.add(tab1, text="High")
+    notebook.add(tab2, text="Medium")
+    notebook.add(tab3, text="Low")
+    notebook.pack(expand=1, fill='both')
+
+
 
     # Start the main event loop
     root.mainloop()
+
+
 
 # End method main_window()
 
@@ -160,6 +186,8 @@ def enter_manually_popup():
     # Create the Confirm button
     confirm_button = tk.Button(enter_manually_popup, text="Confirm")
     confirm_button.grid(row=3, column=1, padx=10, pady=10, sticky="nsew")
+
+
 
 # End method enter_manually_popup() 
 
