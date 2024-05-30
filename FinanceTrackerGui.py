@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 def budget_window():
+    global funds_remaining
 
     # Create the budget window
     global budget_window
@@ -27,8 +28,11 @@ def budget_window():
 
 # The budget is received as a parameter from the budget_window method
 def close_budget_window(budget):
+    global funds_remaining
     # Close the budget window
     budget_window.destroy()
+
+    funds_remaining = float(budget)
 
     # Open the main window and send the budget to that method
     main_window(budget)
@@ -71,21 +75,25 @@ def main_window(budget):
     label2 = tk.Label(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
     label2.grid(row=1, column=0, padx=25, pady=25, sticky="w")
 
+    global funds_remaining_label 
     funds_remaining_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
     funds_remaining_label.grid(row=1, column=1, padx=25, pady=25, sticky="w")
 
+    global tree 
     tree = ttk.Treeview(frame2, show="headings")
 
-    tree["columns"] = ("Name", "Type", "Price", "Date")
+    tree["columns"] = ("Name", "Type", "Price", "Priority", "Date")
 
     tree.column("Name", width=100, anchor="w", stretch=tk.YES)
     tree.column("Type", width=100, anchor="w", stretch=tk.YES)
     tree.column("Price", width=100, anchor="w", stretch=tk.YES)
+    tree.column("Priority", width=100, anchor="w", stretch=tk.YES)
     tree.column("Date", width=100, anchor="w", stretch=tk.YES)
 
     tree.heading("Name", text="Name", anchor="w")
     tree.heading("Type", text="Type", anchor="w")
     tree.heading("Price", text="Price", anchor="w")
+    tree.heading("Priority", text="Priority", anchor="w")
     tree.heading("Date", text="Date", anchor="w")
 
     tree.grid(row=0, column=0, sticky="nsew")
@@ -104,6 +112,7 @@ def main_window(budget):
     add_new_expense_button = tk.Button(root, text="Add New Expense", command=expense_popup)
     add_new_expense_button.grid(row=2, column=0, columnspan=2, pady=10)
     #Bottom left box
+    global high_priority_label, medium_priority_label,low_priority_label
     high_priority_label = tk.Label(frame3, text="High priority expenses : $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
     high_priority_label.grid(row=0, column=0, padx=25, pady=25, sticky="w")
     medium_priority_label = tk.Label(frame3, text="Medium priority expenses : $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
@@ -172,6 +181,9 @@ def enter_manually_popup():
     priority_label = tk.Label(enter_manually_popup, text="Priority")
     priority_label.grid(row=0, column=4, padx=10, pady=10, sticky="w")
 
+    date_label = tk.Label(enter_manually_popup, text="Date")
+    date_label.grid(row=0, column=5, padx=10, pady=10, sticky="w")
+
     # Create the entry text fields
     name_entry = tk.Entry(enter_manually_popup)
     name_entry.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
@@ -179,8 +191,12 @@ def enter_manually_popup():
     price_entry = tk.Entry(enter_manually_popup)
     price_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
+    date_entry = tk.Entry(enter_manually_popup)
+    date_entry.grid(row=1, column=5, padx=10, pady=10, sticky="ew")
+    
+
     # Create the drop-down list for category selection
-    category_options = ["Food", "Personal", "Work", "Home", "Misc"]
+    category_options = ["Food", "Personal", "Work", "Home", "Transportation", "Recurring","Misc"]
     category_var = tk.StringVar(enter_manually_popup)
     category_combobox = ttk.Combobox(enter_manually_popup, textvariable=category_var, values=category_options, state="readonly")
     category_combobox.grid(row=1, column=3, padx=10, pady=10, sticky="ew")
@@ -193,10 +209,38 @@ def enter_manually_popup():
     priority_combobox.current(0)
 
     # Create the Confirm button
-    confirm_button = tk.Button(enter_manually_popup, text="Confirm")
+    confirm_button = tk.Button(enter_manually_popup, text="Confirm", command=lambda: add_expense(name_entry.get(), category_var.get(), price_entry.get(), priority_var.get(), date_entry.get()))
     confirm_button.grid(row=3, column=1, padx=10, pady=10, sticky="nsew")
 
+def add_expense(name, category, price, priority, date):
+    global funds_remaining
 
+
+    price = float(price)
+    funds_remaining -= price
+
+    # Update the treeview with the new expense
+    tree.insert("", "end", values=(name, category, "${:,.2f}".format(price),priority,date ))
+    
+    # Update the remaining funds label
+    funds_remaining_label.config(text="${:,.2f}".format(funds_remaining))
+    
+    # Update priority expense labels
+    if priority == "High":
+        current_text = high_priority_label.cget("text")
+        current_amount = float(current_text.split(": $")[1])
+        new_amount = current_amount + price
+        high_priority_label.config(text="High priority expenses : ${:,.2f}".format(new_amount))
+    elif priority == "Medium":
+        current_text = medium_priority_label.cget("text")
+        current_amount = float(current_text.split(": $")[1])
+        new_amount = current_amount + price
+        medium_priority_label.config(text="Medium priority expenses : ${:,.2f}".format(new_amount))
+    else:
+        current_text = low_priority_label.cget("text")
+        current_amount = float(current_text.split(": $")[1])
+        new_amount = current_amount + price
+        low_priority_label.config(text="Low priority expenses : ${:,.2f}".format(new_amount))
 
 # End method enter_manually_popup() 
 
