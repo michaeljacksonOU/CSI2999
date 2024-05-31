@@ -16,7 +16,7 @@ def set_background(window):
     canvas = tk.Canvas(window, width=1920, height=1080)
     canvas.pack(fill="both", expand=True)
     canvas.create_image(0, 0, image=photo, anchor="nw")
-    window.photo = photo  # Keep a reference to the image to prevent it from being garbage collected
+    window.photo = photo  # reference to photo
     return canvas
 
 
