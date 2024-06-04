@@ -9,7 +9,13 @@ import os
 funds_remaining = 0
 expense_file = "expenses.xlsx"
 
-#PIl 
+def set_theme(window):
+
+    window.tk.call("source", "Azure/azure.tcl")
+
+    window.tk.call("set_theme", "dark")
+
+#PIl
 def set_background(window):
     image = Image.open("GRADIENT-BLUE.png")
     photo = ImageTk.PhotoImage(image)
@@ -27,16 +33,18 @@ def budget_window():
     budget_window.title("Monthly Budget")
     budget_window.geometry("1920x1080")
 
+
+    set_theme(budget_window)
     canvas = set_background(budget_window)
 
-    label1 = tk.Label(budget_window, text="Enter your monthly budget:", font=("Arial", 20), bg="lightblue")
-    canvas.create_window(960, 200, window=label1)
+    label1 = tk.Label(budget_window, text="Enter your monthly budget:", font=("Arial", 23), bg="skyblue", fg="black")
+    canvas.create_window(960, 350, window=label1)
 
     budget_amount = tk.Entry(budget_window, font=("Arial", 20))
-    canvas.create_window(960, 250, window=budget_amount)
+    canvas.create_window(960, 400, window=budget_amount)
 
     confirm_button = tk.Button(budget_window, text="Confirm", command=lambda: close_budget_window(budget_amount.get()), font=("Arial", 20))
-    canvas.create_window(960, 300, window=confirm_button)
+    canvas.create_window(960, 450, window=confirm_button)
 
     budget_window.mainloop()
 
@@ -49,7 +57,8 @@ def close_budget_window(budget):
 
     main_window(budget)
 
-# tkinter and PIL 
+
+# tkinter and PIL
 def main_window(budget):
     global root, funds_remaining_label, tree, high_priority_label, medium_priority_label, low_priority_label
 
@@ -57,12 +66,13 @@ def main_window(budget):
     root.title("Budget Tracker")
     root.geometry("1920x1080")
 
+    set_theme(root)
     canvas = set_background(root)
 
-    frame1 = tk.Frame(root, bg="lightgrey", width=750, height=250)
-    frame2 = tk.Frame(root, bg="lightgrey", width=750, height=250)
-    frame3 = tk.Frame(root, bg="lightgrey", width=750, height=250)
-    frame4 = tk.Frame(root, bg="lightgrey", width=750, height=250)
+    frame1 = tk.Frame(root, width=750, height=350)
+    frame2 = tk.Frame(root, width=760, height=350)
+    frame3 = tk.Frame(root, width=750, height=350)
+    frame4 = tk.Frame(root, width=750, height=350)
 
     root.grid_columnconfigure(0, weight=1)
     root.grid_columnconfigure(1, weight=1)
@@ -74,53 +84,59 @@ def main_window(budget):
     frame3.grid_propagate(False)
     frame4.grid_propagate(False)
 
-    canvas.create_window(375, 125, window=frame1, anchor="nw")
-    canvas.create_window(1125, 125, window=frame2, anchor="nw")
-    canvas.create_window(375, 500, window=frame3, anchor="nw")
-    canvas.create_window(1125, 500, window=frame4, anchor="nw")
+
+    canvas.create_window(180, 125, window=frame1, anchor="nw")
+    canvas.create_window(990, 125, window=frame2, anchor="nw")
+    canvas.create_window(180, 500, window=frame3, anchor="nw")
+    canvas.create_window(990, 500, window=frame4, anchor="nw")
 
     budget_amount = float(budget)
 
-    label1 = tk.Label(frame1, text="Budget:", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    label1 = tk.Label(frame1, text="Budget:", anchor="w", font=("Arial", 28), fg="grey")
     label1.grid(row=0, column=0, padx=25, pady=25, sticky="w")
 
-    budget_amount_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    budget_amount_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28), fg="grey")
     budget_amount_label.grid(row=0, column=1, padx=25, pady=25, sticky="w")
 
-    label2 = tk.Label(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    label2 = tk.Label(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28), fg="grey")
     label2.grid(row=1, column=0, padx=25, pady=25, sticky="w")
 
-    funds_remaining_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    funds_remaining_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28), fg="grey")
     funds_remaining_label.grid(row=1, column=1, padx=25, pady=25, sticky="w")
 
-    
+
     tree = ttk.Treeview(frame2, show="headings")
     tree["columns"] = ("Name", "Type", "Price", "Priority", "Date")
 
     for col in tree["columns"]:
-        tree.column(col, width=150, anchor="w", stretch=tk.YES)
+        tree.column(col, width=150, anchor="w", stretch="YES")
         tree.heading(col, text=col, anchor="w")
+
+
+    scrollbar = ttk.Scrollbar(frame2, orient="vertical", command=tree.yview)
+    scrollbar.grid(row=0, column=1, sticky='ns')
+
+    tree.configure(yscrollcommand=scrollbar.set)
 
     tree.grid(row=0, column=0, sticky="nsew")
 
     frame2.grid_rowconfigure(0, weight=1)
     frame2.grid_columnconfigure(0, weight=1)
 
-    
+
     add_new_expense_button = tk.Button(root, text="Add New Expense", command=expense_popup)
-    canvas.create_window(960, 850, window=add_new_expense_button)
+    canvas.create_window(960, 900, window=add_new_expense_button)
 
-    
     delete_expense_button = tk.Button(root, text="Delete Expense", command=delete_expense)
-    canvas.create_window(960, 900, window=delete_expense_button)
+    canvas.create_window(960, 950, window=delete_expense_button)
 
-    high_priority_label = tk.Label(frame3, text="High priority expenses: $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    high_priority_label = tk.Label(frame3, text="High priority expenses: $0", anchor="w", font=("Arial", 28), fg="grey")
     high_priority_label.grid(row=0, column=0, padx=25, pady=25, sticky="w")
 
-    medium_priority_label = tk.Label(frame3, text="Medium priority expenses: $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    medium_priority_label = tk.Label(frame3, text="Medium priority expenses: $0", anchor="w", font=("Arial", 28), fg="grey")
     medium_priority_label.grid(row=1, column=0, padx=25, pady=25, sticky="w")
 
-    low_priority_label = tk.Label(frame3, text="Low priority expenses: $0", anchor="w", font=("Arial", 28), bg="lightgrey", fg="black")
+    low_priority_label = tk.Label(frame3, text="Low priority expenses: $0", anchor="w", font=("Arial", 28), fg="grey")
     low_priority_label.grid(row=2, column=0, padx=25, pady=25, sticky="w")
 
     style = ttk.Style()
@@ -128,12 +144,47 @@ def main_window(budget):
     notebook = ttk.Notebook(frame4, style="TNotebook")
 
     tab1 = ttk.Frame(notebook)
+    tree1 = ttk.Treeview(tab1, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree1.column(col, width=90, anchor="w", stretch=tk.YES)
+    tree1.heading("Name", text="Name")
+    tree1.heading("Type", text="Type")
+    tree1.heading("Price", text="Price")
+    tree1.heading("Date", text="Date")
+    scrollbar1 = ttk.Scrollbar(tab1, orient="vertical", command=tree.yview)
+    tree1.configure(yscrollcommand=scrollbar1.set)
+    tree1.pack(side="left", fill="both", expand=True)
+    scrollbar1.pack(side="right", fill="y")
+
     tab2 = ttk.Frame(notebook)
+    tree2 = ttk.Treeview(tab2, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree2.column(col, width=90, anchor="w", stretch=tk.YES)
+    tree2.heading("Name", text="Name")
+    tree2.heading("Type", text="Type")
+    tree2.heading("Price", text="Price")
+    tree2.heading("Date", text="Date")
+    scrollbar2 = ttk.Scrollbar(tab2, orient="vertical", command=tree.yview)
+    tree2.configure(yscrollcommand=scrollbar2.set)
+    tree2.pack(side="left", fill="both", expand=True)
+    scrollbar2.pack(side="right", fill="y")
+    tree2.pack()
+
     tab3 = ttk.Frame(notebook)
+    tree3 = ttk.Treeview(tab3, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree3.column(col, width=90, anchor="w", stretch=tk.YES)
+    tree3.heading("Name", text="Name")
+    tree3.heading("Type", text="Type")
+    tree3.heading("Price", text="Price")
+    tree3.heading("Date", text="Date")
+    scrollbar3 = ttk.Scrollbar(tab3, orient="vertical", command=tree.yview)
+    tree3.configure(yscrollcommand=scrollbar3.set)
+    tree3.pack(side="left", fill="both", expand=True)
+    scrollbar3.pack(side="right", fill="y")
+
     notebook.add(tab1, text="High")
     notebook.add(tab2, text="Medium")
     notebook.add(tab3, text="Low")
     notebook.pack(expand=1, fill='both')
+
 
     load_expenses()
 
@@ -279,4 +330,3 @@ def delete_expense():
 
 
 budget_window()
-
