@@ -53,7 +53,7 @@ def close_budget_window(budget):
     main_window(budget)
 
 def main_window(budget):
-    global root, funds_remaining_label, tree, tree1, tree2, tree3, high_priority_label, medium_priority_label, low_priority_label
+    global root, funds_remaining_label, tree, tree1, tree2, tree3, food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label
 
     root = tk.Tk()
     root.title("Budget Tracker")
@@ -356,20 +356,37 @@ def delete_expense():
     save_to_excel()
 
 def update_labels():
-    total_high = total_medium = total_low = 0
+     # Dictionary to hold total expenses for each category
+    category_totals = {
+        "Food": 0,
+        "Personal": 0,
+        "Work": 0,
+        "Home": 0,
+        "Transportation": 0,
+        "Recurring": 0,
+        "Misc": 0,
+    }
 
+    # Iterate through all expenses in the main tree
     for child in tree.get_children():
-        priority = tree.item(child)["values"][3]
-        price = float(tree.item(child)["values"][2].replace("$", "").replace(",", ""))
-        if priority == "High":
-            total_high += price
-        elif priority == "Medium":
-            total_medium += price
-        else:
-            total_low += price
-    high_priority_label.config(text="High priority expenses: ${:,.2f}".format(total_high))
-    medium_priority_label.config(text="Medium priority expenses: ${:,.2f}".format(total_medium))
-    low_priority_label.config(text="Low priority expenses: ${:,.2f}".format(total_low))
+        item = tree.item(child)["values"]
+        category = item[1]
+        price = float(item[2].replace("$", "").replace(",", ""))
+
+        # Update category totals
+        if category in category_totals:
+            category_totals[category] += price
+
+    # Update category labels
+    food_label.config(text="Food: ${:,.2f}".format(category_totals["Food"]))
+    personal_label.config(text="Personal: ${:,.2f}".format(category_totals["Personal"]))
+    work_label.config(text="Work: ${:,.2f}".format(category_totals["Work"]))
+    home_label.config(text="Home: ${:,.2f}".format(category_totals["Home"]))
+    transportation_label.config(text="Transportation: ${:,.2f}".format(category_totals["Transportation"]))
+    recurring_label.config(text="Recurring: ${:,.2f}".format(category_totals["Recurring"]))
+    misc_label.config(text="Miscellaneous: ${:,.2f}".format(category_totals["Misc"]))
+
+    # Update funds remaining label
     funds_remaining_label.config(text="${:,.2f}".format(funds_remaining))
 
 budget_window()
