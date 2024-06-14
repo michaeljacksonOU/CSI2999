@@ -1,55 +1,56 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from PIL import Image, ImageTk
 import pandas as pd
 import os
 from tkcalendar import DateEntry
+import customtkinter as ctk
 
 funds_remaining = 0
 expense_file = "expenses.xlsx"
 
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+mode = "dark"
 
-def set_theme(window):
-    try:
-        window.tk.call("source", "Azure/azure.tcl")
-        window.tk.call("set_theme", "dark")
-    except tk.TclError:
-        pass  # Theme already set
-
-
-def set_background(window):
-    image = Image.open("GRADIENT-BLUE.png")
-    photo = ImageTk.PhotoImage(image)
-    canvas = tk.Canvas(window, width=window.winfo_screenwidth(), height=window.winfo_screenheight())
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, image=photo, anchor="nw")
-    window.photo = photo  # Reference to photo
-    return canvas
-
+def change_theme():
+    global mode
+    if mode == "dark":
+        ctk.set_appearance_mode("light")
+        mode = "light"
+    else:
+        ctk.set_appearance_mode("dark")
+        mode = "dark"
 
 def budget_window():
     global funds_remaining, budget_window
 
-    budget_window = tk.Tk()
+    budget_window = ctk.CTk()
     budget_window.title("Monthly Budget")
-    budget_window.geometry(f"{budget_window.winfo_screenwidth()}x{budget_window.winfo_screenheight()}")
 
-    set_theme(budget_window)
-    canvas = set_background(budget_window)
+    window_width = 1280
+    window_height = 720
 
-    label1 = tk.Label(budget_window, text="Enter your monthly budget:", font=("Arial", 23), bg="skyblue", fg="black")
-    canvas.create_window(budget_window.winfo_screenwidth() // 2, budget_window.winfo_screenheight() // 2 - 50,
-                         window=label1)
+    screen_width = budget_window.winfo_screenwidth()
+    screen_height = budget_window.winfo_screenheight()
 
-    budget_amount = tk.Entry(budget_window, font=("Arial", 20))
-    canvas.create_window(budget_window.winfo_screenwidth() // 2, budget_window.winfo_screenheight() // 2,
-                         window=budget_amount)
+    position_x = (screen_width // 2) - (window_width // 2)
+    position_y = (screen_height // 2) - (window_height // 2)
 
-    confirm_button = tk.Button(budget_window, text="Confirm", command=lambda: close_budget_window(budget_amount.get()),
-                               font=("Arial", 20))
-    canvas.create_window(budget_window.winfo_screenwidth() // 2, budget_window.winfo_screenheight() // 2 + 50,
-                         window=confirm_button)
+    budget_window.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
+
+    frame = ctk.CTkFrame(budget_window)
+    frame.pack(expand=True)
+
+    label1 = ctk.CTkLabel(frame, text="Enter your monthly budget:", font=("Arial", 23))
+    label1.pack(pady=20)
+
+    budget_amount = ctk.CTkEntry(frame, font=("Arial", 20))
+    budget_amount.pack(pady=20)
+
+    confirm_button = ctk.CTkButton(frame, text="Confirm", command=lambda: close_budget_window(budget_amount.get()),
+                                   font=("Arial", 20))
+    confirm_button.pack(pady=20)
 
     budget_window.mainloop()
 
@@ -60,68 +61,65 @@ def close_budget_window(budget):
     funds_remaining = float(budget)
     main_window(budget)
 
-
 def main_window(budget):
     global root, funds_remaining_label, tree, tree1, tree2, tree3, food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label
 
-    root = tk.Tk()
+    root = ctk.CTk()
     root.title("Budget Tracker")
-    root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}")
+    root.geometry("1280x720")
 
-    set_theme(root)
-    canvas = set_background(root)
+    # Create and place the frames in the grid
+    frame1 = ctk.CTkFrame(root)
+    frame2 = ctk.CTkFrame(root)
+    frame3 = ctk.CTkFrame(root)
+    frame4 = ctk.CTkFrame(root)
+    frame5 = ctk.CTkFrame(root)
 
-    frame1 = tk.Frame(root)
-    frame2 = tk.Frame(root)
-    frame3 = tk.Frame(root)
-    frame4 = tk.Frame(root)
+    frame1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+    frame2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+    frame3.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+    frame4.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+    frame5.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
     root.grid_columnconfigure(0, weight=1)
     root.grid_columnconfigure(1, weight=1)
     root.grid_rowconfigure(0, weight=1)
     root.grid_rowconfigure(1, weight=1)
 
-    canvas_width = root.winfo_screenwidth()
-    canvas_height = root.winfo_screenheight()
-
-    frame_width = canvas_width * 0.45
-    frame_height = canvas_height * 0.35
-
-    # Calculate the horizontal and vertical gap between frames
-    horizontal_gap = canvas_width * 0.03
-    vertical_gap = canvas_width * 0.04
-
-    # Create windows for each frame
-    canvas.create_window(horizontal_gap, vertical_gap, width=frame_width, height=frame_height, window=frame1,
-                         anchor="nw")
-    canvas.create_window(horizontal_gap * 2 + frame_width, vertical_gap, width=frame_width, height=frame_height,
-                         window=frame2, anchor="nw")
-    canvas.create_window(horizontal_gap, vertical_gap * 2 + frame_height, width=frame_width, height=frame_height,
-                         window=frame3, anchor="nw")
-    canvas.create_window(horizontal_gap * 2 + frame_width, vertical_gap * 2 + frame_height, width=frame_width,
-                         height=frame_height, window=frame4, anchor="nw")
-
     budget_amount = float(budget)
 
-    label1 = tk.Label(frame1, text="Budget:", anchor="w", font=("Arial", 28), fg="grey")
+    switch_var = ctk.StringVar(value="on")
+    switch = ctk.CTkSwitch(frame5, text="Mode", command=change_theme, variable=switch_var, onvalue="on", offvalue="off")
+    switch.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+
+    label1 = ctk.CTkLabel(frame1, text="Budget:", anchor="w", font=("Arial", 28))
     label1.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-    budget_amount_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28),
-                                   fg="grey")
+    budget_amount_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28))
     budget_amount_label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
-    label2 = tk.Label(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28), fg="grey")
+    label2 = ctk.CTkLabel(frame1, text="Funds Remaining:", anchor="w", font=("Arial", 28))
     label2.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
-    funds_remaining_label = tk.Label(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28),
-                                     fg="grey")
+    funds_remaining_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28))
     funds_remaining_label.grid(row=1, column=1, padx=10, pady=10, sticky="w")
 
-    tree = ttk.Treeview(frame2, show="headings")
+    style = ttk.Style()
+    style.theme_use("alt")
+
+    style.configure("Treeview",
+                    background="grey",
+                    foreground="white",
+                    rowheight=25,
+                    fieldbackground="darkgrey")
+
+    style.map('Treeview', background=[('selected', 'green')])
+
+    tree = ttk.Treeview(frame2, show="headings", style="Treeview")
     tree["columns"] = ("Name", "Type", "Price", "Priority", "Date")
 
     for col in tree["columns"]:
-        tree.column(col, width=150, anchor="w", stretch="YES")
+        tree.column(col, width=100, anchor="w", stretch="YES")
         tree.heading(col, text=col, anchor="w")
 
     scrollbar = ttk.Scrollbar(frame2, orient="vertical", command=tree.yview)
@@ -133,31 +131,31 @@ def main_window(budget):
     frame2.grid_rowconfigure(0, weight=1)
     frame2.grid_columnconfigure(0, weight=1)
 
-    add_new_expense_button = tk.Button(root, text="Add New Expense", command=expense_popup)
-    canvas.create_window(root.winfo_screenwidth() // 2, root.winfo_screenheight() - 100, window=add_new_expense_button)
+    add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=expense_popup)
+    add_new_expense_button.grid(row=2, column=0, padx=10, pady=10)
 
-    delete_expense_button = tk.Button(root, text="Delete Expense", command=delete_expense)
-    canvas.create_window(890, 764, window=delete_expense_button)
+    delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=delete_expense)
+    delete_expense_button.grid(row=2, column=1, padx=10, pady=10)
 
-    food_label = tk.Label(frame3, text="Food: $0", anchor="w", font=("Arial", 20), fg="grey")
+    food_label = ctk.CTkLabel(frame3, text="Food: $0", anchor="w", font=("Arial", 20))
     food_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-    personal_label = tk.Label(frame3, text="Personal: $0", anchor="w", font=("Arial", 20), fg="grey")
+    personal_label = ctk.CTkLabel(frame3, text="Personal: $0", anchor="w", font=("Arial", 20))
     personal_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
-    work_label = tk.Label(frame3, text="Work: $0", anchor="w", font=("Arial", 20), fg="grey")
+    work_label = ctk.CTkLabel(frame3, text="Work: $0", anchor="w", font=("Arial", 20))
     work_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
-    home_label = tk.Label(frame3, text="Home: $0", anchor="w", font=("Arial", 20), fg="grey")
+    home_label = ctk.CTkLabel(frame3, text="Home: $0", anchor="w", font=("Arial", 20))
     home_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
-    transportation_label = tk.Label(frame3, text="Transportation: $0", anchor="w", font=("Arial", 20), fg="grey")
+    transportation_label = ctk.CTkLabel(frame3, text="Transportation: $0", anchor="w", font=("Arial", 20))
     transportation_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
-    recurring_label = tk.Label(frame3, text="Recurring: $0", anchor="w", font=("Arial", 20), fg="grey")
+    recurring_label = ctk.CTkLabel(frame3, text="Recurring: $0", anchor="w", font=("Arial", 20))
     recurring_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
-    misc_label = tk.Label(frame3, text="Miscellaneous: $0", anchor="w", font=("Arial", 20), fg="grey")
+    misc_label = ctk.CTkLabel(frame3, text="Miscellaneous: $0", anchor="w", font=("Arial", 20))
     misc_label.grid(row=6, column=0, padx=10, pady=10, sticky="w")
 
     style = ttk.Style()
@@ -165,7 +163,7 @@ def main_window(budget):
     notebook = ttk.Notebook(frame4, style="TNotebook")
 
     tab1 = ttk.Frame(notebook)
-    tree1 = ttk.Treeview(tab1, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree1 = ttk.Treeview(tab1, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
         tree1.column(col, width=90, anchor="w", stretch=tk.YES)
         tree1.heading(col, text=col)
@@ -175,7 +173,7 @@ def main_window(budget):
     scrollbar1.pack(side="right", fill="y")
 
     tab2 = ttk.Frame(notebook)
-    tree2 = ttk.Treeview(tab2, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree2 = ttk.Treeview(tab2, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
         tree2.column(col, width=90, anchor="w", stretch=tk.YES)
         tree2.heading(col, text=col)
@@ -185,7 +183,7 @@ def main_window(budget):
     scrollbar2.pack(side="right", fill="y")
 
     tab3 = ttk.Frame(notebook)
-    tree3 = ttk.Treeview(tab3, columns=("Name", "Type", "Price", "Date"), show="headings")
+    tree3 = ttk.Treeview(tab3, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
         tree3.column(col, width=90, anchor="w", stretch=tk.YES)
         tree3.heading(col, text=col)
@@ -198,41 +196,44 @@ def main_window(budget):
     notebook.add(tab2, text="Medium")
     notebook.add(tab3, text="Low")
     notebook.pack(fill="both", expand=True)
+
     frame4.grid_columnconfigure(0, weight=1)
     frame4.grid_rowconfigure(0, weight=1)
 
     root.mainloop()
 
-
 def expense_popup():
     global popup, entry1, entry2, entry3, priority_combobox, date_entry
 
-    popup = tk.Toplevel(root)
+    popup = ctk.CTkToplevel(root)
     popup.title("Add New Expense")
     popup.geometry("300x300")
 
-    label1 = tk.Label(popup, text="Expense Name:")
+    popup.transient(root)
+    popup.grab_set()
+
+    label1 = ctk.CTkLabel(popup, text="Expense Name:")
     label1.pack()
-    entry1 = tk.Entry(popup)
+    entry1 = ctk.CTkEntry(popup)
     entry1.pack()
 
-    label2 = tk.Label(popup, text="Expense Type:")
+    label2 = ctk.CTkLabel(popup, text="Expense Type:")
     label2.pack()
     expense_types = ["Food", "Personal", "Work", "Home", "Transportation", "Recurring", "Miscellaneous"]
-    entry2 = ttk.Combobox(popup, values=expense_types)
+    entry2 = ctk.CTkComboBox(popup, values=expense_types)
     entry2.pack()
 
-    label3 = tk.Label(popup, text="Expense Price:")
+    label3 = ctk.CTkLabel(popup, text="Expense Price:")
     label3.pack()
-    entry3 = tk.Entry(popup)
+    entry3 = ctk.CTkEntry(popup)
     entry3.pack()
 
-    label4 = tk.Label(popup, text="Expense Priority:")
+    label4 = ctk.CTkLabel(popup, text="Expense Priority:")
     label4.pack()
-    priority_combobox = ttk.Combobox(popup, values=["High", "Medium", "Low"])
+    priority_combobox = ctk.CTkComboBox(popup, values=["High", "Medium", "Low"])
     priority_combobox.pack()
 
-    label5 = tk.Label(popup, text="Expense Date:")
+    label5 = ctk.CTkLabel(popup, text="Expense Date:")
     label5.pack()
     date_entry = DateEntry(popup, date_pattern="yyyy-mm-dd")
     date_entry.pack()
@@ -251,7 +252,7 @@ def add_expense():
     date = date_entry.get_date()
 
     funds_remaining -= price
-    funds_remaining_label.config(text="${:,.2f}".format(funds_remaining))
+    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))
 
     tree.insert("", "end", values=(name, expense_type, price, priority, date))
 
@@ -281,21 +282,33 @@ def update_labels(expense_type, price):
     current_text = labels[expense_type].cget("text")
     current_amount = float(current_text.split("$")[1].replace(",", ""))
     new_amount = current_amount + price
-    labels[expense_type].config(text=f"{expense_type}: ${new_amount:,.2f}")
+    labels[expense_type].configure(text=f"{expense_type}: ${new_amount:,.2f}")
+
+    if funds_remaining <= 0:
+        messagebox.showwarning("No Funds Remaining", "You have used all of your budget.")
 
 
 def save_to_excel(name, expense_type, price, priority, date):
+    new_row = {"Name": name, "Type": expense_type, "Price": price, "Priority": priority, "Date": date}
+
     if os.path.exists(expense_file):
         df = pd.read_excel(expense_file)
     else:
         df = pd.DataFrame(columns=["Name", "Type", "Price", "Priority", "Date"])
 
-    new_row = {"Name": name, "Type": expense_type, "Price": price, "Priority": priority, "Date": date}
-    df = df.append(new_row, ignore_index=True)
+    # Append new row to the DataFrame
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    # Save the new DataFrame to Excel
     df.to_excel(expense_file, index=False)
 
+    # Debugging statement to verify the DataFrame
+    print("Data saved to Excel:")
+    print(df)
 
 def delete_expense():
+    global funds_remaining
+
     selected_item = tree.selection()[0]
     values = tree.item(selected_item, "values")
     tree.delete(selected_item)
@@ -318,7 +331,7 @@ def delete_expense():
 
     price = float(values[2])
     funds_remaining += price
-    funds_remaining_label.config(text="${:,.2f}".format(funds_remaining))
+    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))
 
     update_labels_after_deletion(values[1], price)
     remove_from_excel(values[0])
@@ -338,7 +351,7 @@ def update_labels_after_deletion(expense_type, price):
     current_text = labels[expense_type].cget("text")
     current_amount = float(current_text.split("$")[1].replace(",", ""))
     new_amount = current_amount - price
-    labels[expense_type].config(text=f"{expense_type}: ${new_amount:,.2f}")
+    labels[expense_type].configure(text=f"{expense_type}: ${new_amount:,.2f}")
 
 
 def remove_from_excel(expense_name):
