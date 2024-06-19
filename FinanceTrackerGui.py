@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import openpyxl
 import pandas as pd
 import os
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Note: assignment of the file path must be changed accordingly to the unique location where is saved on each individual user's end system 
-expense_file = r"C:\Users\User\Documents\June15Test\expenses.xlsx"
+expense_file = r"C:\Users\Peter\PycharmProjects\pythonProject\expenses.xlsx"
 
 # Set app mode and theme
 ctk.set_appearance_mode("dark")
@@ -22,9 +22,12 @@ def change_theme():
     if mode == "dark":
         ctk.set_appearance_mode("light")
         mode = "light"
+        apply_light_mode_style()
     else:
         ctk.set_appearance_mode("dark")
         mode = "dark"
+        apply_dark_mode_style()
+
 
 # Method to display main window elements:
 # Frame 1: budget and funds remaining
@@ -71,8 +74,8 @@ def main_window():
     label1 = ctk.CTkLabel(frame1, text="Expenses:", anchor="w", font=("Arial", 28))
     label1.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-    # expenses_amount_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28))
-    # expenses_amount_label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
+    #expenses_amount_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(budget_amount), anchor="w", font=("Arial", 28))
+    #expenses_amount_label.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
     # Frame 1 (Top Left)
     # Create Add New Expense button
@@ -84,16 +87,10 @@ def main_window():
     delete_expense_button.grid(row=2, column=1, padx=10, pady=10)
 
     # Frame 2 (Top Right)
-    style = ttk.Style()
-    style.theme_use("alt")
-
-    style.configure("Treeview",
-                    background="grey",
-                    foreground="white",
-                    rowheight=25,
-                    fieldbackground="darkgrey")
-
-    style.map('Treeview', background=[('selected', 'green')])
+    if mode == "dark":
+        apply_dark_mode_style()
+    else:
+        apply_light_mode_style()
 
     # Create a treeview to display the user's entered expenses
     tree = ttk.Treeview(frame2, show="headings", style="Treeview")
@@ -117,7 +114,7 @@ def main_window():
     style.configure("TNotebook.Tab", font=('Helvetica', 25, 'bold'), padding=[40, 0])
     notebook = ttk.Notebook(frame4, style="TNotebook")
 
-    # Create a tab containg a treeview filtered to display only High priority expenses
+    # Create a tab containing a treeview filtered to display only High priority expenses
     tab1 = ttk.Frame(notebook)
     tree1 = ttk.Treeview(tab1, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
@@ -128,7 +125,7 @@ def main_window():
     tree1.pack(side="left", fill="both", expand=True)
     scrollbar1.pack(side="right", fill="y")
 
-    # Create a tab containg a treeview filtered to display only Medium priority expenses
+    # Create a tab containing a treeview filtered to display only Medium priority expenses
     tab2 = ttk.Frame(notebook)
     tree2 = ttk.Treeview(tab2, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
@@ -139,7 +136,7 @@ def main_window():
     tree2.pack(side="left", fill="both", expand=True)
     scrollbar2.pack(side="right", fill="y")
 
-    # Create a tab containg a treeview filtered to display only Low priority expenses
+    # Create a tab containing a treeview filtered to display only Low priority expenses
     tab3 = ttk.Frame(notebook)
     tree3 = ttk.Treeview(tab3, columns=("Name", "Type", "Price", "Date"), show="headings", style="Treeview")
     for col in ("Name", "Type", "Price", "Date"):
@@ -171,23 +168,23 @@ def main_window():
 
 # Method to load any previously entered expenses by the user from the excel file into the treeviews
 def load_expenses():
-    # Load the the excel file from the filepath and access the active sheet
+    # Load the excel file from the filepath and access the active sheet
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
 
     # Load the expense info from the active sheet of the excel file into Frame 2 treeview
-    
-    # Start the iteration from row 2 of the sheet and yield cell values only 
-    # (rather than cell objects in order to save memory since we do not need additional cell properties)  
+
+    # Start the iteration from row 2 of the sheet and yield cell values only
+    # (rather than cell objects in order to save memory since we do not need additional cell properties)
     for current_row in sheet1.iter_rows(min_row=2, values_only=True):
-        # Parent argument is empty: "" 
-        # Enter expense data at the end of the Treeview: "end" 
+        # Parent argument is empty: ""
+        # Enter expense data at the end of the Treeview: "end"
         # Insert expense info extracted from current row of the sheet: expense info = current_row
         tree.insert("", "end", values=current_row)
-    
+
     # Load the expense info from the active sheet of the excel file into Frame 4 treeview tabs
     for column in sheet1.iter_rows(min_row=2, values_only=True):
-        
+
         specified_columns = (column[0], column[1], column[2], column[4])
 
         if column[3] == "High":
@@ -208,18 +205,23 @@ def update_pie_chart(frame3):
     # Load existing expenses from the Excel file
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
-    
-    # Create a dictionary and set expense Type set as keys and expense Price as values initialized at zero 
+
+    # Create a dictionary and set expense Type set as keys and expense Price as values initialized at zero
     type_dictionary = {'Food': 0, 'Personal': 0, 'Home': 0, 'Work': 0, 'Transportation': 0, 'Recurring': 0, 'Miscellaneous': 0}
-    
+
     for row in sheet1.iter_rows(min_row=2, values_only=True):
 
         expense_type = row[1]
         expense_price = row[2]
 
+        try:
+            expense_price = float(expense_price)
+        except ValueError:
+            continue
+
         if expense_type in type_dictionary:
             type_dictionary[expense_type] += expense_price
-        
+
         else:
             type_dictionary[expense_type] = expense_price
 
@@ -232,7 +234,7 @@ def update_pie_chart(frame3):
     # Create the pie chart in Frame 3
     fig, ax = plt.subplots()
     ax.pie(pie_chart_sizes, autopct='%1.1f%%', pctdistance=1.25)
-    ax.legend(pie_chart_labels, loc="center right", bbox_to_anchor=(1.75, 0.5)) 
+    ax.legend(pie_chart_labels, loc="center right", bbox_to_anchor=(1.75, 0.5))
     ax.set_title('Expense Distribution by Category')
 
     canvas = FigureCanvasTkAgg(fig, master=frame3)
@@ -285,28 +287,49 @@ def expense_popup(frame3):
 # Method add_expense() modified from "Code First with Hala" YouTube video:
 # https://www.youtube.com/watch?v=8m4uDS_nyCk&pp=ygUlcHl0aG9uIGV4Y2VsIGFwcCBjb2RlIGZpcnN0IHdpdGggaGFsYQ%3D%3D
 def add_expense(frame3):
-    workbook = openpyxl.load_workbook(expense_file)
-    sheet1 = workbook.active
-    
-    # Append and save the user's expense information to the excel file 
-    expense_info = [entry1.get(), entry2.get(), float(entry3.get()), priority_combobox.get(), date_entry.get()]
-    sheet1.append(expense_info)
-    workbook.save(expense_file)
+    try:
+        # Validate that all fields are filled
+        if not entry1.get() or not entry2.get() or not entry3.get() or not priority_combobox.get() or not date_entry.get():
+            messagebox.showerror("Error", "Please fill in all fields")
+            return
 
-    # Insert expense info into Frame 2 treeview 
-    tree.insert('', tk.END, values=expense_info)
+        # Validate that price is a number
+        try:
+            price = float(entry3.get())
+        except ValueError:
+            messagebox.showerror("Error", "Price must be a number")
+            return
 
-    # Insert expense info into proper Frame 4 treeview tab based on the priority level of the expense
-    if priority_combobox.get() == "High":
-        tree1.insert("", "end", values=(entry1.get(), entry2.get(), float(entry3.get()), date_entry.get()))
-    elif priority_combobox.get() == "Medium":
-        tree2.insert("", "end", values=(entry1.get(), entry2.get(), float(entry3.get()), date_entry.get()))
-    else:
-        tree3.insert("", "end", values=(entry1.get(), entry2.get(), float(entry3.get()), date_entry.get()))
-    
-    # Method call to update_pie_chart() to update the pie chart after expense addition
-    update_pie_chart(frame3)
+        if len(entry1.get()) > 15:
+            messagebox.showerror("Error", "Expense Name must be 15 characters or less")
+            return
 
+        # Append and save the user's expense information to the excel file
+        expense_info = [entry1.get(), entry2.get(), price, priority_combobox.get(), date_entry.get()]
+        workbook = openpyxl.load_workbook(expense_file)
+        sheet1 = workbook.active
+        sheet1.append(expense_info)
+        workbook.save(expense_file)
+
+        # Insert expense info into Frame 2 treeview
+        tree.insert('', tk.END, values=expense_info)
+
+        # Insert expense info into proper Frame 4 treeview tab based on the priority level of the expense
+        if priority_combobox.get() == "High":
+            tree1.insert("", "end", values=(entry1.get(), entry2.get(), price, date_entry.get()))
+        elif priority_combobox.get() == "Medium":
+            tree2.insert("", "end", values=(entry1.get(), entry2.get(), price, date_entry.get()))
+        else:
+            tree3.insert("", "end", values=(entry1.get(), entry2.get(), price, date_entry.get()))
+
+        # Update the pie chart
+        update_pie_chart(frame3)
+    except FileNotFoundError:
+        messagebox.showerror("Error", f"File {expense_file} not found. Please check the file path and try again.")
+    except openpyxl.utils.exceptions.InvalidFileException:
+        messagebox.showerror("Error", f"The file {expense_file} is not a valid Excel file. Please check the file and try again.")
+    except Exception as e:
+        messagebox.showerror("Error", f"An unexpected error occurred: {str(e)}")
 
 # Method to delete selected expense from the treeviews and excel file
 def delete_expense(frame3):
@@ -316,7 +339,7 @@ def delete_expense(frame3):
     # Assign selected_item with the currently selected expense row from Frame 2 treeview
     selected_item = tree.selection()[0]
     values = tree.item(selected_item, "values")
-    
+
     # Delete selected expense from Frame 2 treeview
     tree.delete(selected_item)
 
@@ -336,14 +359,56 @@ def delete_expense(frame3):
             if tree3.item(item, "values")[0] == values[0]:
                 tree3.delete(item)
                 break
-    
-    # Delete selected expense from excel file
-    #sheet1.append(expense_info)
-    #workbook.save(expense_file)
+
+    # Delete selected expense from Excel file
+    for row in sheet1.iter_rows():
+        if (row[0].value == values[0] and
+                row[1].value == values[1] and
+                row[2].value == float(values[2]) and
+                row[3].value == values[3] and
+                row[4].value == values[4]):
+            sheet1.delete_rows(row[0].row, 1)
+            break
+
+    workbook.save(expense_file)
 
     # Method call to update_pie_chart() to update the pie chart after expense deletion
     update_pie_chart(frame3)
-            
+
+def apply_light_mode_style():
+    style = ttk.Style()
+    style.theme_use("alt")
+
+    style.configure("Treeview",
+                    background="#FFFFFF",  # Light background
+                    foreground="black",  # Black text
+                    rowheight=25,
+                    fieldbackground="#FFFFFF")  # Light background
+
+    style.map('Treeview', background=[('selected', '#E5E5E5')])  # Selected row color
+
+    style.configure("Treeview.Heading",
+                    background="#DDDDDD",  # Light background for headings
+                    foreground="black",  # Black text for headings
+                    font=("Helvetica", 10, "bold"))  # Bold font for headings
+
+def apply_dark_mode_style():
+    style = ttk.Style()
+    style.theme_use("alt")
+
+    style.configure("Treeview",
+                    background="#333333",  # Dark background
+                    foreground="white",  # White text
+                    rowheight=25,
+                    fieldbackground="#333333")  # Dark background
+
+    style.map('Treeview', background=[('selected', '#2b2b2b')])  # Selected row color
+
+    style.configure("Treeview.Heading",
+                    background="#444444",  # Darker background for headings
+                    foreground="white",  # White text for headings
+                    font=("Helvetica", 10, "bold"))  # Bold font for headings
+
 
 # Method call to main_window() to start the program 
 main_window()
