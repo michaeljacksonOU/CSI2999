@@ -3,6 +3,8 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 import openpyxl
 import pandas as pd
 import os
+
+from customtkinter.windows.widgets import ctk_label
 from tkcalendar import DateEntry
 import customtkinter as ctk
 import matplotlib.pyplot as plt
@@ -23,10 +25,11 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Note: assignment of the file path to expense_file must be changed accordingly to the unique location where is saved on each individual user's end system 
-expense_file = r"C:\Users\User\Documents\June18Test\expenses.xlsx"
+expense_file = r"C:\Users\peter\PycharmProjects\pythonProject\expenses.xlsx"
 
 funds_remaining = 0.0
 
+tab4 = None
 food_label = None
 personal_label = None
 work_label = None
@@ -47,43 +50,63 @@ def change_theme():
         ctk.set_appearance_mode("light")
         mode = "light"
         apply_light_mode_style()
+        apply_light_mode_tabs()
+        apply_theme_to_labels_in_tab4("light")
+
     else:
         ctk.set_appearance_mode("dark")
         mode = "dark"
         apply_dark_mode_style()
+        apply_dark_mode_tabs()
+        apply_theme_to_labels_in_tab4("dark")
 
 
 def welcome_window():
     global root
-    root = ctk.CTk()
-    root.withdraw()  # Hide the main root window initially
-
-    welcome = ctk.CTkToplevel()
+    welcome = ctk.CTkToplevel(root)
     welcome.title("Welcome to ExpenseExpert")
     welcome.geometry("400x300")
+
+    welcome_width = 400
+    welcome_height = 300
+
+    screen_width = welcome.winfo_screenwidth()
+    screen_height = welcome.winfo_screenheight()
+
+    # Calculate the x and y coordinates for the window to be centered
+    x = (screen_width // 2) - (welcome_width // 2)
+    y = (screen_height // 2) - (welcome_height // 2)
+
+    # Set the geometry of the window
+    welcome.geometry(f'{welcome_width}x{welcome_height}+{x}+{y}')
+
+    if mode == "dark":
+        apply_dark_mode_style_welcome()
+    else:
+        apply_light_mode_style_welcome()
 
     # Create and place the welcome label
     welcome_label = ctk.CTkLabel(welcome, text="Welcome to ExpenseExpert!", font=("Arial", 16))
     welcome_label.pack(pady=20)
 
     # Load and resize the question mark icon
-    question_icon = Image.open(r"C:\Users\User\Documents\June18Test\question_mark (1).png")
+    question_icon = Image.open(r"C:\Users\peter\PycharmProjects\pythonProject\question_mark.png")
     question_icon = question_icon.resize((20, 20), Image.Resampling.LANCZOS)  # Resize to smaller size
-    question_icon = ImageTk.PhotoImage(question_icon)
+    question_icon = ctk.CTkImage(question_icon)
 
     # Create a frame to hold the question mark button
     frame = ctk.CTkFrame(welcome)
     frame.pack(fill="both", expand=True)
 
     # Create and place the question mark button in the top left corner
-    question_button = tk.Button(frame, image=question_icon, command=show_instructions)
+    button_size = 35
+    question_button = ctk.CTkButton(frame, width=button_size, height=button_size, image=question_icon, text="", command=show_instructions)
     question_button.image = question_icon  # Keep a reference to the image
     question_button.place(x=10, y=10)  # Adjust x, y to position the icon as needed
 
     # Create and place the close button at the bottom
     close_button = ctk.CTkButton(welcome, text="Get Started", command=lambda: close_welcome(welcome))
-    close_button.pack(side="bottom", pady=10)
-
+    close_button.pack(side="bottom")
 
 def close_welcome(welcome):
     welcome.destroy()
@@ -108,20 +131,42 @@ def show_instructions():
 # Frame 3: pie chart of distribution of entered expenses by category
 # Frame 4: treeview of entered expenses sorted by priority tabs 
 def main_window():
-    global root, tree, tree1, tree2, tree3, funds_remaining_label, tab4, tab5 
+    global root, tree, tree1, tree2, tree3, funds_remaining_label, tab4, tab5
     global food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label
 
     # Create the main window 
     root = ctk.CTk()
+    root.withdraw()
     root.title("ExpenseExpert")
-    root.geometry("1280x720")
+
+    window_width = 1280
+    window_height = 720
+
+    # Get the screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Calculate the x and y coordinates for the window to be centered
+    x = (screen_width // 2) - (window_width // 2)
+    y = (screen_height // 2) - (window_height // 2)
+
+    # Set the geometry of the window
+    root.geometry(f'{window_width}x{window_height}+{x}+{y}')
 
     # Create and place the frames in the grid
-    frame1 = ctk.CTkFrame(root)
-    frame2 = ctk.CTkFrame(root)
-    frame3 = ctk.CTkFrame(root)
-    frame4 = ctk.CTkFrame(root)
-    frame5 = ctk.CTkFrame(root)
+    frame1_width, frame1_height = 620, 340
+    frame2_width, frame2_height = 620, 340
+    frame3_width, frame3_height = 620, 340
+    frame4_width, frame4_height = 620, 340
+    frame5_width, frame5_height = 620, 40
+
+    # Create and place the frames in the grid
+    frame1 = ctk.CTkFrame(root, width=frame1_width, height=frame1_height)
+    frame2 = ctk.CTkFrame(root, width=frame2_width, height=frame2_height)
+    frame3 = ctk.CTkFrame(root, width=frame3_width, height=frame3_height)
+    frame4 = ctk.CTkFrame(root, width=frame4_width, height=frame4_height)
+    frame5 = ctk.CTkFrame(root, width=frame5_width, height=frame5_height)
+
     frame1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
     frame2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
     frame3.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
@@ -145,39 +190,12 @@ def main_window():
     switch = ctk.CTkSwitch(frame5, text="Mode", command=change_theme, variable=switch_var, onvalue="on", offvalue="off")
     switch.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-    total_expenses_label = ctk.CTkLabel(frame1, text="Expenses:", anchor="w", font=("Arial", 28))
-    total_expenses_label.grid(row=0, column=0, padx=10, pady=20, sticky="w")
-
-    # Initialize funds_remaining_label
-    funds_remaining_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(funds_remaining), anchor="w",
-                                         font=("Arial", 28))
-    funds_remaining_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-
-
-    # Frame 1 (Top Left)
-    # Create Add New Expense button
-    add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=lambda: expense_popup(frame3))
-    add_new_expense_button.grid(row=2, column=0, padx=10, pady=10)
-
-    # Create Delete Expense button
-    delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=lambda: delete_expense(frame3))
-    delete_expense_button.grid(row=2, column=1, padx=10, pady=10)
-
-    # Create Upload Receipt button
-    upload_receipt_button = ctk.CTkButton(frame1, text="Upload Receipt", command=upload_image)
-    upload_receipt_button.grid(row=2, column=2, padx=10, pady=10)
-
     # Frame 2 (Top Right)
-    style = ttk.Style()
-    style.theme_use("alt")
+    if mode == "dark":
+        apply_dark_mode_style()
 
-    style.configure("Treeview",
-                    background="grey",
-                    foreground="white",
-                    rowheight=25,
-                    fieldbackground="darkgrey")
-
-    style.map('Treeview', background=[('selected', '#2FA571')])
+    else:
+        apply_light_mode_style()
 
     # Create a treeview to display the user's entered expenses
     tree = ttk.Treeview(frame2, show="headings", style="Treeview")
@@ -241,16 +259,23 @@ def main_window():
 
     frame4.grid_columnconfigure(0, weight=1)
     frame4.grid_rowconfigure(0, weight=1)
-    
-    # Method call to load_expenses() to load any previously entered expenses saved in the excel file into the treeviews 
+
+    # Method call to load_expenses() to load any previously entered expenses saved in the excel file into the treeviews
     load_expenses()
 
     # Frame 3 (Bottom Left)
     # Create two tabs
-    notebook2 = ttk.Notebook(frame3, style="TNotebook") 
-    tab4 = ttk.Frame(notebook2, style="Tab.TNotebook.Tab")
+
+    if mode == "dark":
+        apply_dark_mode_tabs()
+
+    else:
+        apply_light_mode_tabs()
+
+    notebook2 = ttk.Notebook(frame3, style="TNotebook")
+    tab4 = ttk.Frame(notebook2, style="TNotebook")
     tab5 = ttk.Frame(notebook2, style="TNotebook")
-    
+
     notebook2.add(tab4, text="Totals")
     notebook2.add(tab5, text="Chart")
     notebook2.pack(fill="both", expand=True)
@@ -260,28 +285,60 @@ def main_window():
 
     # Tab 4
     # Initialize category labels
+
     food_label = ctk.CTkLabel(tab4, text="Food: $0", anchor="w", font=("Arial", 28))
     food_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+
     personal_label = ctk.CTkLabel(tab4, text="Personal: $0", anchor="w", font=("Arial", 28))
     personal_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+
     work_label = ctk.CTkLabel(tab4, text="Work: $0", anchor="w", font=("Arial", 28))
     work_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+
     home_label = ctk.CTkLabel(tab4, text="Home: $0", anchor="w", font=("Arial", 28))
     home_label.grid(row=6, column=0, padx=10, pady=5, sticky="w")
+
     transportation_label = ctk.CTkLabel(tab4, text="Transportation: $0", anchor="w", font=("Arial", 28))
     transportation_label.grid(row=3, column=1, padx=10, pady=5, sticky="w")
+
     recurring_label = ctk.CTkLabel(tab4, text="Recurring: $0", anchor="w", font=("Arial", 28))
     recurring_label.grid(row=4, column=1, padx=10, pady=5, sticky="w")
+
     misc_label = ctk.CTkLabel(tab4, text="Miscellaneous: $0", anchor="w", font=("Arial", 28))
     misc_label.grid(row=5, column=1, padx=10, pady=5, sticky="w")
 
+
+    total_expenses_label = ctk.CTkLabel(frame1, text="Expenses:", anchor="w", font=("Arial", 28))
+    total_expenses_label.grid(row=0, column=0, padx=10, pady=20, sticky="w")
+
+    # Initialize funds_remaining_label
+    funds_remaining_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(funds_remaining), anchor="w",
+                                         font=("Arial", 28))
+    funds_remaining_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+
+    # Frame 1 (Top Left)
+    # Create Add New Expense button
+    add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=lambda: expense_popup(frame3))
+    add_new_expense_button.grid(row=2, column=0, padx=10, pady=10)
+
+    # Create Delete Expense button
+    delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=lambda: delete_expense(frame3))
+    delete_expense_button.grid(row=2, column=1, padx=10, pady=10)
+
+    # Create Upload Receipt button
+    upload_receipt_button = ctk.CTkButton(frame1, text="Upload Receipt", command=upload_image)
+    upload_receipt_button.grid(row=2, column=2, padx=10, pady=10)
+
     # Method call to update the labels
     #update_labels()
+
+    apply_theme_to_labels_in_tab4(mode)
 
     # Tab 5
     # Method to call to update_pie_chart to create and update the pie chart
     update_pie_chart(frame3)
 
+    welcome_window()
     # Start the main window event loop
     root.mainloop()
 
@@ -378,7 +435,7 @@ def update_pie_chart(frame3):
         ax.pie(pie_chart_sizes, autopct='%1.1f%%', pctdistance=1.25)
         ax.legend(pie_chart_labels, loc="center right", prop=legend_font, bbox_to_anchor=(1.75, 0.5))
         ax.set_title('Expense Distribution by Category', fontproperties=title_font)
-    
+
     else:
         fig, ax = plt.subplots()
         legend_font = FontProperties(family='Arial', weight='normal', size=12)
@@ -577,6 +634,7 @@ def extract_receipt_data(file_path):
 
 # Upload and process receipt image
 def upload_image():
+
     file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
     if file_path:
         receipt_data = extract_receipt_data(file_path)
@@ -694,41 +752,90 @@ def save_to_excel(name, expense_type, price, priority, date):
 # Method to apply the light mode to the app
 def apply_light_mode_style():
     style = ttk.Style()
-    style.theme_use("alt")
+    style.theme_use("default")
 
     style.configure("Treeview",
-                    background="#FFFFFF",  # Light background
-                    foreground="black",  # Black text
+                    background="#FFFFFF",
+                    foreground="black",
                     rowheight=25,
-                    fieldbackground="#FFFFFF")  # Light background
+                    fieldbackground="#FFFFFF")
 
-    style.map('Treeview', background=[('selected', '#E5E5E5')])  # Selected row color
+    style.map('Treeview', background=[('selected', '#E5E5E5')])
 
     style.configure("Treeview.Heading",
-                    background="#DDDDDD",  # Light background for headings
-                    foreground="black",  # Black text for headings
-                    font=("Helvetica", 10, "bold"))  # Bold font for headings
+                    background="#DDDDDD",
+                    foreground="black",
+                    font=("Helvetica", 10, "bold"))
 
-
-# Method to apply the dark mode to the app
 def apply_dark_mode_style():
     style = ttk.Style()
-    style.theme_use("alt")
+    style.theme_use("default")
 
     style.configure("Treeview",
-                    background="#333333",  # Dark background
-                    foreground="white",  # White text
+                    background="#333333",
+                    foreground="white",
                     rowheight=25,
-                    fieldbackground="#333333")  # Dark background
+                    fieldbackground="#333333")
 
-    style.map('Treeview', background=[('selected', '#2b2b2b')])  # Selected row color
+    style.map('Treeview', background=[('selected', '#2b2b2b')])
 
     style.configure("Treeview.Heading",
-                    background="#444444",  # Darker background for headings
-                    foreground="white",  # White text for headings
-                    font=("Helvetica", 10, "bold"))  # Bold font for headings
+                    background="#444444",
+                    foreground="white",
+                    font=("Helvetica", 10, "bold"))
+
+def apply_dark_mode_style_welcome():
+    style = ttk.Style()
+    style.theme_use("default")
+
+    style.configure("TLabel",
+                    background="#333333",  # Dark background
+                    foreground="white")  # White text
+
+def apply_light_mode_style_welcome():
+    style = ttk.Style()
+    style.theme_use("default")
+
+    style.configure("TLabel",
+                    background="#FFFFFF",  # Light background
+                    foreground="black")  # Black text
+
+def apply_dark_mode_tabs():
+    style = ttk.Style()
+    style.theme_use("default")
+
+    style.configure("TNotebook", background="#333333")
+
+def apply_light_mode_tabs():
+    style = ttk.Style()
+    style.theme_use("default")
+
+    style.configure("TNotebook", background="#FFFFFF")
+
+def apply_theme_to_labels_in_tab4(mode):
+    global food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label
+
+    # Create a list of labels in tab4
+    labels = [
+        food_label,
+        personal_label,
+        work_label,
+        home_label,
+        transportation_label,
+        recurring_label,
+        misc_label
+    ]
+
+    if mode == "dark":
+        fg_color = "#333333"
+    else:
+        fg_color = "#FFFFFF"
+
+    # Determine foreground color based on the theme
+    for label in labels:
+        label.configure(fg_color=fg_color)
 
 
 # Main window call to start the program
-welcome_window()
-main_window()
+if __name__ == '__main__':
+    main_window()
