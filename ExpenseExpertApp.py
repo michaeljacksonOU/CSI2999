@@ -59,7 +59,6 @@ def change_theme():
         apply_dark_mode_tabs()
         apply_theme_to_labels_in_tab4("dark")
 
-
 def welcome_window():
     global root
     welcome = ctk.CTkToplevel(root)
@@ -115,11 +114,15 @@ def close_welcome(welcome):
 # Function to show instructions
 def show_instructions():
     instructions = (
-        "Instructions on how to use the Expense Expert app:\n\n"
-        "1. To add a new expense, click 'Add New Expense' and fill in the details.\n"
-        "2. To delete an expense, select it from the list and click 'Delete Expense'.\n"
-        "3. To upload a receipt, click 'Upload Receipt' and follow the instructions.\n"
-        "4. Switch between light and dark modes using the toggle button.\n"
+        'Instructions on how to use the Expense Expert app:\n\n'
+        '1. To add a new expense, click \'Add New Expense\' and fill in the details.\n'
+        '2. To delete an expense, select it from the list and click \'Delete Expense\'.\n'
+        '3. To upload a receipt, click \'Upload Receipt\' and follow the instructions.\n'
+        '4. Switch between light and dark modes using the toggle button.\n'
+        'This app uses an Excel file named \'expenses.xlsx\' to store and keep track of user expenses. '
+        'This excel sheet will be used to load up your expenses that have previously entered, if you choose to return at a later date. '
+        'Our backwards compatibility allows for easy access to excel functionalities.\n '
+
     )
     messagebox.showinfo("Instructions", instructions)
 
@@ -833,7 +836,6 @@ def apply_theme_to_labels_in_tab4(mode):
     # Determine foreground color based on the theme
     for label in labels:
         label.configure(fg_color=fg_color)
-
 
 # Main window call to start the program
 if __name__ == '__main__':
