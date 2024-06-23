@@ -27,7 +27,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Note: assignment of the file path to expense_file must be changed accordingly to the unique location where is saved on each individual user's end system 
-expense_file = r"C:\Users\User\Documents\June22Test\expenses.xlsx"
+expense_file = r"C:\Users\peter\PycharmProjects\pythonProject\expenses.xlsx"
 
 funds_remaining = 0.0
 
@@ -91,7 +91,7 @@ def welcome_window():
     welcome_label.pack(pady=20)
 
     # Load and resize the question mark icon
-    question_icon = Image.open(r"C:\Users\User\Documents\June22Test\question_mark (1).png")
+    question_icon = Image.open(r"C:\Users\peter\PycharmProjects\pythonProject\question_mark.png")
     question_icon = question_icon.resize((20, 20), Image.Resampling.LANCZOS)  # Resize to smaller size
     question_icon = ctk.CTkImage(question_icon)
 
@@ -123,6 +123,9 @@ def show_instructions():
         "2. To delete an expense, select it from the list and click 'Delete Expense'.\n"
         "3. To upload a receipt, click 'Upload Receipt' and follow the instructions.\n"
         "4. Switch between light and dark modes using the toggle button.\n"
+        "This app uses an Excel file named 'expenses.xlsx' to store and keep track of user expenses."
+        "This excel sheet will be used to load your expenses that have previously been entered if you choose to return at a later date. "
+        "Our backwards compatibility allows for easy access to Excel functions."
     )
     messagebox.showinfo("Instructions", instructions)
 
@@ -596,7 +599,7 @@ def delete_expense():
     update_pie_chart()
 
 
-# Pop-up window to ask the user to confirm whether or not they want to delete all their entered expenses
+# Pop-up window to ask the user to confirm whether they want to delete all their entered expenses
 def messagebox_popup():
     popup = ctk.CTkToplevel(root)
     popup.title("Confirmation")
