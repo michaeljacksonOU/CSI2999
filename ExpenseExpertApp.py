@@ -24,7 +24,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Note: assignment of the file path to expense_file must be changed accordingly to the unique location where is saved on each individual user's end system 
-expense_file = r"C:\Users\peter\PycharmProjects\pythonProject\expenses.xlsx"
+expense_file = r"C:\Users\asila\Desktop\CSI-2999\CSI2999\expenses.xlsx"
 
 funds_remaining = 0.0
 
@@ -89,7 +89,7 @@ def welcome_window():
     welcome_label.pack(pady=20)
 
     # Load and resize the question mark icon
-    question_icon = Image.open(r"C:\Users\peter\PycharmProjects\pythonProject\question_mark.png")
+    question_icon = Image.open(r"C:\Users\asila\Desktop\CSI-2999\CSI2999\question_mark (1).png")
     question_icon = question_icon.resize((20, 20), Image.Resampling.LANCZOS)  # Resize to smaller size
     question_icon = ctk.CTkImage(question_icon)
 
@@ -633,58 +633,57 @@ def extract_receipt_data(file_path):
 
 # Upload and process receipt image
 def upload_image():
-
     file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
     if file_path:
         receipt_data = extract_receipt_data(file_path)
         if receipt_data:
-
             print("Extracted Receipt Data:", json.dumps(receipt_data, indent=4))
 
             store_name = (
-                    receipt_data.get('store_name') or
-                    receipt_data.get('store') or
-                    receipt_data.get('store_info', {}).get('store_name') or
-                    receipt_data.get('store_information', {}).get('store_name') or
-                    receipt_data.get('location', {}).get('store_name') or
-                    receipt_data.get('storeinfo', {}).get('storename') or
-                    receipt_data.get('store', {}).get('name') or
-                    receipt_data.get('storeinfo', {}).get('store') or
-                    receipt_data.get('merchant') or
-                    receipt_data.get('store_info', {}).get('name') or
-                    'Unknown Store'
+                receipt_data.get('store_name') or
+                (receipt_data.get('store', {}).get('name') if isinstance(receipt_data.get('store'), dict) else receipt_data.get('store')) or
+                (receipt_data.get('store_info', {}).get('store_name') if isinstance(receipt_data.get('store_info'), dict) else None) or
+                (receipt_data.get('store_information', {}).get('store_name') if isinstance(receipt_data.get('store_information'), dict) else None) or
+                (receipt_data.get('location', {}).get('store_name') if isinstance(receipt_data.get('location'), dict) else None) or
+                (receipt_data.get('storeinfo', {}).get('storename') if isinstance(receipt_data.get('storeinfo'), dict) else None) or
+                (receipt_data.get('storeinfo', {}).get('store') if isinstance(receipt_data.get('storeinfo'), dict) else None) or
+                receipt_data.get('merchant') or
+                (receipt_data.get('store_info', {}).get('name') if isinstance(receipt_data.get('store_info'), dict) else None) or
+                'Unknown Store'
             )
+
             total_price = str(
                 receipt_data.get('total_balance') or
                 receipt_data.get('total') or
                 receipt_data.get('balance_due') or
-                receipt_data.get('totals', {}).get('total') or
-                receipt_data.get('payment', {}).get('total_amount') or
+                (receipt_data.get('totals', {}).get('total') if isinstance(receipt_data.get('totals'), dict) else None) or
+                (receipt_data.get('payment', {}).get('total_amount') if isinstance(receipt_data.get('payment'), dict) else None) or
                 receipt_data.get('total_purchase') or
-                receipt_data.get('receipt', {}).get('total') or
+                (receipt_data.get('receipt', {}).get('total') if isinstance(receipt_data.get('receipt'), dict) else None) or
                 receipt_data.get('balance') or
-                receipt_data.get('payment_info', {}).get('total_purchase') or
+                (receipt_data.get('payment_info', {}).get('total_purchase') if isinstance(receipt_data.get('payment_info'), dict) else None) or
                 receipt_data.get('amount_due') or
                 receipt_data.get('total_amount') or
-                receipt_data.get('receiptinfo', {}).get('total') or
+                (receipt_data.get('receiptinfo', {}).get('total') if isinstance(receipt_data.get('receiptinfo'), dict) else None) or
                 'Unknown Price'
             )
+
             date = (
-                    receipt_data.get('transaction_date') or
-                    receipt_data.get('date') or
-                    receipt_data.get('date_time') or
-                    receipt_data.get('transaction_info', {}).get('transaction_date') or
-                    receipt_data.get('transaction_details', {}).get('date') or
-                    receipt_data.get('payment_information', {}).get('transaction_date') or
-                    receipt_data.get('receipt', {}).get('date') or
-                    receipt_data.get('transaction_date_time') or
-                    receipt_data.get('TransactionDateTime') or
-                    receipt_data.get('purchase_date') or
-                    receipt_data.get('receiptinfo', {}).get('date') or
-                    receipt_data.get('receipt_date') or
-                    receipt_data.get('transaction_details', {}).get('date_time') or
-                    receipt_data.get('store', {}).get('date') or
-                    'Unknown Date'
+                receipt_data.get('transaction_date') or
+                receipt_data.get('date') or
+                receipt_data.get('date_time') or
+                (receipt_data.get('transaction_info', {}).get('transaction_date') if isinstance(receipt_data.get('transaction_info'), dict) else None) or
+                (receipt_data.get('transaction_details', {}).get('date') if isinstance(receipt_data.get('transaction_details'), dict) else None) or
+                (receipt_data.get('payment_information', {}).get('transaction_date') if isinstance(receipt_data.get('payment_information'), dict) else None) or
+                (receipt_data.get('receipt', {}).get('date') if isinstance(receipt_data.get('receipt'), dict) else None) or
+                receipt_data.get('transaction_date_time') or
+                receipt_data.get('TransactionDateTime') or
+                receipt_data.get('purchase_date') or
+                (receipt_data.get('receiptinfo', {}).get('date') if isinstance(receipt_data.get('receiptinfo'), dict) else None) or
+                receipt_data.get('receipt_date') or
+                (receipt_data.get('transaction_details', {}).get('date_time') if isinstance(receipt_data.get('transaction_details'), dict) else None) or
+                (receipt_data.get('store', {}).get('date') if isinstance(receipt_data.get('store'), dict) else None) or
+                'Unknown Date'
             )
 
             # Add pop-up inputs for expense type and priority
@@ -712,16 +711,17 @@ def upload_image():
 
 # Modify the add_expense_from_receipt function to accept expense_type and priority parameters
 def add_expense_from_receipt(store_name, total_price, date, expense_type, priority):
-    global funds_remaining  # Declare funds_remaining as global
+    global funds_remaining
 
     try:
-        price = float(total_price)
+        # Convert to string first in case it's already a float
+        price = float(str(total_price).replace('$', '').replace(',', ''))
     except ValueError:
         messagebox.showerror("Error", "Invalid price format.")
         return
 
     funds_remaining -= price
-    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))  # Use 'configure' instead of 'config'
+    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))
 
     tree.insert("", "end", values=(store_name, expense_type, price, priority, date))
 
