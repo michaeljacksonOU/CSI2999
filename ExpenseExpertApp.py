@@ -3,6 +3,7 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 import openpyxl
 import pandas as pd
 import os
+from customtkinter import CTkImage
 from customtkinter.windows.widgets import ctk_label
 from tkcalendar import DateEntry
 import customtkinter as ctk
@@ -15,6 +16,8 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
+#pytesseract.pytesseract.tesseract_cmd=r"C:\Users\User\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+
 # Load .env
 load_dotenv()
 
@@ -24,7 +27,7 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Note: assignment of the file path to expense_file must be changed accordingly to the unique location where is saved on each individual user's end system 
-expense_file = r"C:\Users\asila\Desktop\CSI-2999\CSI2999\expenses.xlsx"
+expense_file = r"C:\Users\User\Documents\June22Test\expenses.xlsx"
 
 funds_remaining = 0.0
 
@@ -64,7 +67,6 @@ def welcome_window():
     global root
     welcome = ctk.CTkToplevel(root)
     welcome.title("Welcome to ExpenseExpert")
-    welcome.geometry("400x300")
 
     welcome_width = 400
     welcome_height = 300
@@ -89,7 +91,7 @@ def welcome_window():
     welcome_label.pack(pady=20)
 
     # Load and resize the question mark icon
-    question_icon = Image.open(r"C:\Users\asila\Desktop\CSI-2999\CSI2999\question_mark (1).png")
+    question_icon = Image.open(r"C:\Users\User\Documents\June22Test\question_mark (1).png")
     question_icon = question_icon.resize((20, 20), Image.Resampling.LANCZOS)  # Resize to smaller size
     question_icon = ctk.CTkImage(question_icon)
 
@@ -101,11 +103,12 @@ def welcome_window():
     button_size = 35
     question_button = ctk.CTkButton(frame, width=button_size, height=button_size, image=question_icon, text="", command=show_instructions)
     question_button.image = question_icon  # Keep a reference to the image
-    question_button.place(x=10, y=10)  # Adjust x, y to position the icon as needed
+    question_button.place(x=10, y=10)  # Adjust x, y to position the icon as needed    
 
     # Create and place the close button at the bottom
     close_button = ctk.CTkButton(welcome, text="Get Started", command=lambda: close_welcome(welcome))
     close_button.pack(side="bottom")
+
 
 def close_welcome(welcome):
     welcome.destroy()
@@ -115,7 +118,7 @@ def close_welcome(welcome):
 # Function to show instructions
 def show_instructions():
     instructions = (
-        "Instructions on how to use the Expense Expert app:\n\n"
+        "Instructions on how to use the ExpenseExpert app:\n\n"
         "1. To add a new expense, click 'Add New Expense' and fill in the details.\n"
         "2. To delete an expense, select it from the list and click 'Delete Expense'.\n"
         "3. To upload a receipt, click 'Upload Receipt' and follow the instructions.\n"
@@ -317,16 +320,20 @@ def main_window():
 
     # Frame 1 (Top Left)
     # Create Add New Expense button
-    add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=lambda: expense_popup(frame3))
-    add_new_expense_button.grid(row=2, column=0, padx=10, pady=10)
+    add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=expense_popup)
+    add_new_expense_button.grid(row=2, column=1, padx=10, pady=10)
 
     # Create Delete Expense button
-    delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=lambda: delete_expense(frame3))
-    delete_expense_button.grid(row=2, column=1, padx=10, pady=10)
+    delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=delete_expense)
+    delete_expense_button.grid(row=3, column=1, padx=10, pady=10)
 
     # Create Upload Receipt button
     upload_receipt_button = ctk.CTkButton(frame1, text="Upload Receipt", command=upload_image)
     upload_receipt_button.grid(row=2, column=2, padx=10, pady=10)
+
+    # Create Clear All Expenses button
+    clear_all_expenses_button = ctk.CTkButton(frame1, text="Clear All Expenses", command=messagebox_popup)
+    clear_all_expenses_button.grid(row=3, column=2, padx=10, pady=10)
 
     # Method call to update the labels
     #update_labels()
@@ -335,7 +342,15 @@ def main_window():
 
     # Tab 5
     # Method to call to update_pie_chart to create and update the pie chart
-    update_pie_chart(frame3)
+    update_pie_chart()
+
+    tree.propagate(False)
+    tree1.propagate(False)
+    tree2.propagate(False)
+    tree3.propagate(False)
+    tab4.propagate(False)
+    tab5.propagate(False)
+
 
     welcome_window()
     # Start the main window event loop
@@ -392,7 +407,7 @@ def update_labels(expense_type, price):
 
 
 # Method to update the pie chart
-def update_pie_chart(frame3):
+def update_pie_chart():
     # Clear all widgets inside Frame 3 in order to keep the pie chart up to date after an expense is added/deleted
     for widget in tab5.winfo_children():
         widget.destroy()
@@ -427,21 +442,12 @@ def update_pie_chart(frame3):
     pie_chart_sizes = list(filtered_type_dictionary.values())
 
     # Create the pie chart in Tab 5 of Frame 3
-    if mode == "dark":
-        fig, ax = plt.subplots()
-        legend_font = FontProperties(family='Arial', weight='normal', size=12)
-        title_font = FontProperties(family='Arial', weight='bold', size=20)
-        ax.pie(pie_chart_sizes, autopct='%1.1f%%', pctdistance=1.25)
-        ax.legend(pie_chart_labels, loc="center right", prop=legend_font, bbox_to_anchor=(1.75, 0.5))
-        ax.set_title('Expense Distribution by Category', fontproperties=title_font)
-
-    else:
-        fig, ax = plt.subplots()
-        legend_font = FontProperties(family='Arial', weight='normal', size=12)
-        title_font = FontProperties(family='Arial', weight='bold', size=20)
-        ax.pie(pie_chart_sizes, autopct='%1.1f%%', pctdistance=1.25)
-        ax.legend(pie_chart_labels, loc="center right", prop=legend_font, bbox_to_anchor=(1.75, 0.5))
-        ax.set_title('Expense Distribution by Category', fontproperties=title_font)
+    fig, ax = plt.subplots()
+    legend_font = FontProperties(family='Arial', weight='normal', size=12)
+    title_font = FontProperties(family='Arial', weight='bold', size=20)
+    ax.pie(pie_chart_sizes, autopct='%1.1f%%', pctdistance=1.25)
+    ax.legend(pie_chart_labels, loc="center right", prop=legend_font, bbox_to_anchor=(1.6, 0.5))
+    ax.set_title('Expense Distribution by Category', fontproperties=title_font)
 
     canvas = FigureCanvasTkAgg(fig, master=tab5)
     canvas.draw()
@@ -449,7 +455,7 @@ def update_pie_chart(frame3):
 
 
 # Method to allow the user to input their expense information
-def expense_popup(frame3):
+def expense_popup():
     global popup, entry1, entry2, entry3, priority_combobox, date_entry
 
     # Create the expense pop-up window
@@ -487,12 +493,12 @@ def expense_popup(frame3):
     date_entry = DateEntry(popup, date_pattern="yyyy-mm-dd", background="#2FA571", selectbackground="#2FA571", showweeknumbers=False, firstweekday="sunday", width=25, buttoncolor="#2FA571")
     date_entry.pack()
 
-    add_button = ctk.CTkButton(popup, text="Add", command=lambda: add_expense(frame3))
+    add_button = ctk.CTkButton(popup, text="Add", command=add_expense)
     add_button.pack(padx=10, pady=20)
 
 
 # Method to add the user's expense (modified from "Code First with Hala" YouTube video)
-def add_expense(frame3):
+def add_expense():
     try:
         # Validate that all fields are filled
         if not entry1.get() or not entry2.get() or not entry3.get() or not priority_combobox.get() or not date_entry.get():
@@ -532,7 +538,7 @@ def add_expense(frame3):
         #update_labels()
 
         # Update the pie chart after expense addition
-        update_pie_chart(frame3)
+        update_pie_chart()
 
     except FileNotFoundError:
         messagebox.showerror("Error", f"File {expense_file} not found. Please check the file path and try again.")
@@ -543,7 +549,7 @@ def add_expense(frame3):
 
 
 # Method to delete selected expense from the treeviews and excel file
-def delete_expense(frame3):
+def delete_expense():
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
 
@@ -587,7 +593,78 @@ def delete_expense(frame3):
     #update_labels()
 
     # Update the pie chart after expense deletion
-    update_pie_chart(frame3)
+    update_pie_chart()
+
+
+# Pop-up window to ask the user to confirm whether or not they want to delete all their entered expenses
+def messagebox_popup():
+    popup = ctk.CTkToplevel(root)
+    popup.title("Confirmation")
+    
+    popup_width = 350
+    popup_height = 250
+
+    screen_width = popup.winfo_screenwidth()
+    screen_height = popup.winfo_screenheight()
+
+    # Calculate the x and y coordinates for the window to be centered
+    x = (screen_width // 2) - (popup_width // 2)
+    y = (screen_height // 2) - (popup_height // 2)
+
+    # Set the geometry of the window
+    popup.geometry(f'{popup_width}x{popup_height}+{x}+{y}')
+
+    popup.transient(root)
+    popup.grab_set()
+
+    messagebox_label1 = ctk.CTkLabel(popup, text=f"Clear All Expenses?", font=("Arial", 16, "bold"))
+    messagebox_label1.pack(padx=10, pady=10)
+    
+    messagebox_label2 = ctk.CTkLabel(popup, text=f"All entered expenses will be permanently deleted.\nThis action cannot be undone.", font=("Arial", 14))
+    messagebox_label2.pack(padx=10, pady=10)
+    
+    confirm_button = ctk.CTkButton(popup, text="Confirm", command=lambda: clear_all_expenses(popup))
+    confirm_button.pack(padx=10, pady=10)
+    
+    cancel_button = ctk.CTkButton(popup, text="Cancel", command=lambda: close_messagebox_popup(popup))
+    cancel_button.pack(padx=10, pady=10)
+    
+
+# Method to delete all the user's entered expenses from treeviews, excel file, labels, and pie chart
+def clear_all_expenses(popup):  
+    workbook = openpyxl.load_workbook(expense_file)
+    sheet1 = workbook.active
+
+    # Delete all entered expenses from all treeviews
+    for row in tree.get_children():
+        tree.delete(row)
+    
+    for row in tree1.get_children():
+        tree1.delete(row)
+
+    for row in tree2.get_children():
+        tree2.delete(row)
+
+    for row in tree3.get_children():
+        tree3.delete(row)
+
+    # Delete all entered expenses from excel file
+    sheet1.delete_rows(2, sheet1.max_row)
+    workbook.save(expense_file)
+
+    # Update the labels after deleting all expenses
+    #update_labels()
+
+    # Update the pie chart after deleting all expenses
+    update_pie_chart()
+
+    # Method call to close the messagebox pop-up window
+    close_messagebox_popup(popup)
+
+
+# Method to close the messsagebox pop-up window
+def close_messagebox_popup(popup):
+    popup.destroy()
 
 
 # Normalize keys in the extracted receipt data
@@ -633,57 +710,58 @@ def extract_receipt_data(file_path):
 
 # Upload and process receipt image
 def upload_image():
+
     file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
     if file_path:
         receipt_data = extract_receipt_data(file_path)
         if receipt_data:
+
             print("Extracted Receipt Data:", json.dumps(receipt_data, indent=4))
 
             store_name = (
-                receipt_data.get('store_name') or
-                (receipt_data.get('store', {}).get('name') if isinstance(receipt_data.get('store'), dict) else receipt_data.get('store')) or
-                (receipt_data.get('store_info', {}).get('store_name') if isinstance(receipt_data.get('store_info'), dict) else None) or
-                (receipt_data.get('store_information', {}).get('store_name') if isinstance(receipt_data.get('store_information'), dict) else None) or
-                (receipt_data.get('location', {}).get('store_name') if isinstance(receipt_data.get('location'), dict) else None) or
-                (receipt_data.get('storeinfo', {}).get('storename') if isinstance(receipt_data.get('storeinfo'), dict) else None) or
-                (receipt_data.get('storeinfo', {}).get('store') if isinstance(receipt_data.get('storeinfo'), dict) else None) or
-                receipt_data.get('merchant') or
-                (receipt_data.get('store_info', {}).get('name') if isinstance(receipt_data.get('store_info'), dict) else None) or
-                'Unknown Store'
+                    receipt_data.get('store_name') or
+                    receipt_data.get('store') or
+                    receipt_data.get('store_info', {}).get('store_name') or
+                    receipt_data.get('store_information', {}).get('store_name') or
+                    receipt_data.get('location', {}).get('store_name') or
+                    receipt_data.get('storeinfo', {}).get('storename') or
+                    receipt_data.get('store', {}).get('name') or
+                    receipt_data.get('storeinfo', {}).get('store') or
+                    receipt_data.get('merchant') or
+                    receipt_data.get('store_info', {}).get('name') or
+                    'Unknown Store'
             )
-
             total_price = str(
                 receipt_data.get('total_balance') or
                 receipt_data.get('total') or
                 receipt_data.get('balance_due') or
-                (receipt_data.get('totals', {}).get('total') if isinstance(receipt_data.get('totals'), dict) else None) or
-                (receipt_data.get('payment', {}).get('total_amount') if isinstance(receipt_data.get('payment'), dict) else None) or
+                receipt_data.get('totals', {}).get('total') or
+                receipt_data.get('payment', {}).get('total_amount') or
                 receipt_data.get('total_purchase') or
-                (receipt_data.get('receipt', {}).get('total') if isinstance(receipt_data.get('receipt'), dict) else None) or
+                receipt_data.get('receipt', {}).get('total') or
                 receipt_data.get('balance') or
-                (receipt_data.get('payment_info', {}).get('total_purchase') if isinstance(receipt_data.get('payment_info'), dict) else None) or
+                receipt_data.get('payment_info', {}).get('total_purchase') or
                 receipt_data.get('amount_due') or
                 receipt_data.get('total_amount') or
-                (receipt_data.get('receiptinfo', {}).get('total') if isinstance(receipt_data.get('receiptinfo'), dict) else None) or
+                receipt_data.get('receiptinfo', {}).get('total') or
                 'Unknown Price'
             )
-
             date = (
-                receipt_data.get('transaction_date') or
-                receipt_data.get('date') or
-                receipt_data.get('date_time') or
-                (receipt_data.get('transaction_info', {}).get('transaction_date') if isinstance(receipt_data.get('transaction_info'), dict) else None) or
-                (receipt_data.get('transaction_details', {}).get('date') if isinstance(receipt_data.get('transaction_details'), dict) else None) or
-                (receipt_data.get('payment_information', {}).get('transaction_date') if isinstance(receipt_data.get('payment_information'), dict) else None) or
-                (receipt_data.get('receipt', {}).get('date') if isinstance(receipt_data.get('receipt'), dict) else None) or
-                receipt_data.get('transaction_date_time') or
-                receipt_data.get('TransactionDateTime') or
-                receipt_data.get('purchase_date') or
-                (receipt_data.get('receiptinfo', {}).get('date') if isinstance(receipt_data.get('receiptinfo'), dict) else None) or
-                receipt_data.get('receipt_date') or
-                (receipt_data.get('transaction_details', {}).get('date_time') if isinstance(receipt_data.get('transaction_details'), dict) else None) or
-                (receipt_data.get('store', {}).get('date') if isinstance(receipt_data.get('store'), dict) else None) or
-                'Unknown Date'
+                    receipt_data.get('transaction_date') or
+                    receipt_data.get('date') or
+                    receipt_data.get('date_time') or
+                    receipt_data.get('transaction_info', {}).get('transaction_date') or
+                    receipt_data.get('transaction_details', {}).get('date') or
+                    receipt_data.get('payment_information', {}).get('transaction_date') or
+                    receipt_data.get('receipt', {}).get('date') or
+                    receipt_data.get('transaction_date_time') or
+                    receipt_data.get('TransactionDateTime') or
+                    receipt_data.get('purchase_date') or
+                    receipt_data.get('receiptinfo', {}).get('date') or
+                    receipt_data.get('receipt_date') or
+                    receipt_data.get('transaction_details', {}).get('date_time') or
+                    receipt_data.get('store', {}).get('date') or
+                    'Unknown Date'
             )
 
             # Add pop-up inputs for expense type and priority
@@ -711,17 +789,16 @@ def upload_image():
 
 # Modify the add_expense_from_receipt function to accept expense_type and priority parameters
 def add_expense_from_receipt(store_name, total_price, date, expense_type, priority):
-    global funds_remaining
+    global funds_remaining  # Declare funds_remaining as global
 
     try:
-        # Convert to string first in case it's already a float
-        price = float(str(total_price).replace('$', '').replace(',', ''))
+        price = float(total_price)
     except ValueError:
         messagebox.showerror("Error", "Invalid price format.")
         return
 
     funds_remaining -= price
-    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))
+    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))  # Use 'configure' instead of 'config'
 
     tree.insert("", "end", values=(store_name, expense_type, price, priority, date))
 
