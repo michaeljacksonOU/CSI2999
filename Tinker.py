@@ -16,7 +16,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# pytesseract.pytesseract.tesseract_cmd=r"C:\Users\User\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Load .env
 load_dotenv()
@@ -27,9 +27,11 @@ api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
 
 # Note: assignment of the file path to expense_file must be changed accordingly to the unique location where is saved on each individual user's end system
-expense_file = r'D:\User\Dylan\Downloads\expenses (1).xlsx'
+expense_file = r"C:\Users\mikej\OneDrive\Documents\CSI 2999\CSI2999-4\CSI2999\CSI2999\expenses.xlsx"
 
-funds_remaining = 0.0
+total_expenses = 0.0
+total_expenses_label = None
+
 
 tab4 = None
 food_label = None
@@ -92,7 +94,7 @@ def welcome_window():
     welcome_label.pack(pady=20)
 
     # Load and resize the question mark icon
-    question_icon = Image.open(r'D:\User\Dylan\Downloads\question_mark (1).png')
+    question_icon = Image.open(r"C:\Users\mikej\OneDrive\Documents\CSI 2999\CSI2999-4\CSI2999\CSI2999\question_mark (1).png")
     question_icon = question_icon.resize((20, 20), Image.Resampling.LANCZOS)  # Resize to smaller size
     question_icon = ctk.CTkImage(question_icon)
 
@@ -138,8 +140,8 @@ def show_instructions():
 # Frame 3: pie chart of distribution of entered expenses by category
 # Frame 4: treeview of entered expenses sorted by priority tabs
 def main_window():
-    global root, tree, tree1, tree2, tree3, funds_remaining_label, tab4, tab5
-    global food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label
+    global root, tree, tree1, tree2, tree3, total_expenses, tab4, tab5
+    global food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label, total_expenses_label
 
     # Create the main window
     root = ctk.CTk()
@@ -267,9 +269,6 @@ def main_window():
     frame4.grid_columnconfigure(0, weight=1)
     frame4.grid_rowconfigure(0, weight=1)
 
-    # Method call to load_expenses() to load any previously entered expenses saved in the excel file into the treeviews
-    load_expenses()
-
     # Frame 3 (Bottom Left)
     # Create two tabs
 
@@ -314,33 +313,36 @@ def main_window():
     misc_label = ctk.CTkLabel(tab4, text="Miscellaneous: $0", anchor="w", font=("Arial", 28))
     misc_label.grid(row=5, column=1, padx=10, pady=5, sticky="w")
 
-    total_expenses_label = ctk.CTkLabel(frame1, text="Expenses:", anchor="w", font=("Arial", 28))
+    total_expenses_label = ctk.CTkLabel(frame1, text="ExpenseExpert Dashboard", anchor="w", font=("Arial", 28))
     total_expenses_label.grid(row=0, column=0, padx=10, pady=20, sticky="w")
 
     # Initialize funds_remaining_label
-    funds_remaining_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(funds_remaining), anchor="w",
+    total_expenses_label = ctk.CTkLabel(frame1, text="${:,.2f}".format(total_expenses), anchor="w",
                                          font=("Arial", 28))
-    funds_remaining_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+    total_expenses_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
     # Frame 1 (Top Left)
     # Create Add New Expense button
     add_new_expense_button = ctk.CTkButton(frame1, text="Add New Expense", command=expense_popup)
-    add_new_expense_button.grid(row=2, column=1, padx=10, pady=10)
+    add_new_expense_button.grid(row=2, column=0, padx=10, pady=10, sticky = "w")
 
     # Create Delete Expense button
     delete_expense_button = ctk.CTkButton(frame1, text="Delete Expense", command=delete_expense)
-    delete_expense_button.grid(row=3, column=1, padx=10, pady=10)
+    delete_expense_button.grid(row=3, column=0, padx=10, pady=10, sticky = "w")
 
     # Create Upload Receipt button
     upload_receipt_button = ctk.CTkButton(frame1, text="Upload Receipt", command=upload_image)
-    upload_receipt_button.grid(row=2, column=2, padx=10, pady=10)
+    upload_receipt_button.grid(row=2, column=1, padx=10, pady=10, sticky = "e")
 
     # Create Clear All Expenses button
     clear_all_expenses_button = ctk.CTkButton(frame1, text="Clear All Expenses", command=messagebox_popup)
-    clear_all_expenses_button.grid(row=3, column=2, padx=10, pady=10)
+    clear_all_expenses_button.grid(row=3, column=1, padx=10, pady=10, sticky = "e")
+
+    # Method call to load_expenses() to load any previously entered expenses saved in the excel file into the treeviews
+    load_expenses()
 
     # Method call to update the labels
-    # update_labels()
+    #update_labels()
 
     apply_theme_to_labels_in_tab4(mode)
 
@@ -362,34 +364,60 @@ def main_window():
 
 # Method to load any previously entered expenses by the user from the excel file into the treeviews
 def load_expenses():
+    global food_label, personal_label, work_label, home_label, transportation_label, recurring_label, misc_label, total_expenses_label
+    global total_expenses, total_expenses_label
+
+    # Initialize category totals
+    category_totals = {
+        "Food": 0.0,
+        "Personal": 0.0,
+        "Work": 0.0,
+        "Home": 0.0,
+        "Transportation": 0.0,
+        "Recurring": 0.0,
+        "Miscellaneous": 0.0
+    }
+
+    total_expenses = 0.0
+
     # Load the excel file from the filepath and access the active sheet
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
 
     # Load the expense info from the active sheet of the excel file into Frame 2 treeview
-
-    # Start the iteration from row 2 of the sheet and yield cell values only
-    # (rather than cell objects in order to save memory since we do not need additional cell properties)
     for current_row in sheet1.iter_rows(min_row=2, values_only=True):
-        # Parent argument is empty: ""
-        # Enter expense data at the end of the Treeview: "end"
-        # Insert expense info extracted from current row of the sheet: expense info = current_row
         tree.insert("", "end", values=current_row)
+        # Update the funds_remaining and category_totals
+        price = float(current_row[2])
+        category = current_row[1]
+        total_expenses += price
+        category_totals[category] += price
+
+    # Update category labels
+    food_label.configure(text="Food: ${:,.2f}".format(category_totals["Food"]))
+    personal_label.configure(text="Personal: ${:,.2f}".format(category_totals["Personal"]))
+    work_label.configure(text="Work: ${:,.2f}".format(category_totals["Work"]))
+    home_label.configure(text="Home: ${:,.2f}".format(category_totals["Home"]))
+    transportation_label.configure(text="Transportation: ${:,.2f}".format(category_totals["Transportation"]))
+    recurring_label.configure(text="Recurring: ${:,.2f}".format(category_totals["Recurring"]))
+    misc_label.configure(text="Miscellaneous: ${:,.2f}".format(category_totals["Miscellaneous"]))
+
+    # Calculate total expenses
+    total_expenses = sum(category_totals.values())
+
+    # Update expenses label in Frame 1
+    total_expenses_label.configure(text="Total Expenses: ${:,.2f}".format(total_expenses))
 
     # Load the expense info from the active sheet of the excel file into Frame 4 treeview tabs
     for column in sheet1.iter_rows(min_row=2, values_only=True):
-
         specified_columns = (column[0], column[1], column[2], column[4])
 
         if column[3] == "High":
             tree1.insert("", "end", values=specified_columns)
-
         elif column[3] == "Medium":
             tree2.insert("", "end", values=specified_columns)
-
         else:
             tree3.insert("", "end", values=specified_columns)
-
 
 # Update labels after expense addition
 def update_labels(expense_type, price):
@@ -504,7 +532,7 @@ def expense_popup():
 
 # Method to add the user's expense (modified from "Code First with Hala" YouTube video)
 def add_expense():
-    global funds_remaining
+    global total_expenses
     try:
         # Validate that all fields are filled
         if not entry1.get() or not entry2.get() or not entry3.get() or not priority_combobox.get() or not date_entry.get():
@@ -515,8 +543,8 @@ def add_expense():
         try:
             price = float(entry3.get())
 
-            funds_remaining += price
-            funds_remaining_label.configure(text="Total Expenses: ${:,.2f}".format(funds_remaining))
+            total_expenses += price
+            total_expenses_label.configure(text="Total Expenses: ${:,.2f}".format(total_expenses))
 
 
         except ValueError:
@@ -563,7 +591,7 @@ def add_expense():
 
 # Method to delete selected expense from the treeviews and excel file
 def delete_expense():
-    global funds_remaining
+    global total_expenses
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
 
@@ -572,8 +600,8 @@ def delete_expense():
     values = tree.item(selected_item, "values")
 
     price = float(values[2])
-    funds_remaining -= price
-    funds_remaining_label.configure(text="Total Expenses: ${:,.2f}".format(funds_remaining))
+    total_expenses -= price
+    total_expenses_label.configure(text="Total Expenses: ${:,.2f}".format(total_expenses))
 
     # Delete selected expense from Frame 2 treeview
     tree.delete(selected_item)
@@ -654,12 +682,12 @@ def messagebox_popup():
 
 # Method to delete all the user's entered expenses from treeviews, excel file, labels, and pie chart
 def clear_all_expenses(popup):
-    global funds_remaining
+    global total_expenses
     workbook = openpyxl.load_workbook(expense_file)
     sheet1 = workbook.active
 
-    funds_remaining = 0.0
-    funds_remaining_label.configure(text="Total Expenses: ${:,.2f}".format(funds_remaining))
+    total_expenses = 0.0
+    total_expenses_label.configure(text="Total Expenses: ${:,.2f}".format(total_expenses))
 
     # Delete all entered expenses from all treeviews
     for row in tree.get_children():
@@ -683,6 +711,17 @@ def clear_all_expenses(popup):
 
     # Update the pie chart after deleting all expenses
     update_pie_chart()
+
+    global food_label, personal_label, work_label, home_label, transportation_label,recurring_label, misc_label
+    food_label.configure(text="Food: $0.00")
+    personal_label.configure(text="Personal: $0.00")
+    work_label.configure(text="Work: $0.00")
+    home_label.configure(text="Home: $0.00")
+    transportation_label.configure(text="Transportation: $0.00")
+    recurring_label.configure(text="Recurring: $0.00")
+    misc_label.configure(text="Miscellaneous: $0.00")
+    
+
 
     # Method call to close the messagebox pop-up window
     close_messagebox_popup(popup)
@@ -814,7 +853,7 @@ def upload_image():
 
 # Modify the add_expense_from_receipt function to accept expense_type and priority parameters
 def add_expense_from_receipt(store_name, total_price, date, expense_type, priority):
-    global funds_remaining  # Declare funds_remaining as global
+    global total_expenses  # Declare funds_remaining as global
 
     try:
         price = float(total_price)
@@ -822,8 +861,8 @@ def add_expense_from_receipt(store_name, total_price, date, expense_type, priori
         messagebox.showerror("Error", "Invalid price format.")
         return
 
-    funds_remaining -= price
-    funds_remaining_label.configure(text="${:,.2f}".format(funds_remaining))  # Use 'configure' instead of 'config'
+    total_expenses += price
+    total_expenses_label.configure(text="${:,.2f}".format(total_expenses))  # Use 'configure' instead of 'config'
 
 
 
@@ -840,6 +879,7 @@ def add_expense_from_receipt(store_name, total_price, date, expense_type, priori
 
     update_labels(expense_type, price)
     save_to_excel(store_name, expense_type, price, priority, date)
+    update_pie_chart()
 
 
 # Save to excel file
